@@ -1,5 +1,5 @@
 import React from "react";
-import Button from "../Common_Componenets/Common_Button.jsx";
+import Button from "../Common_Componenets/Common_Button/Button";
 export default function Attendencecard({ subject = [] }) {
   if (subject.length === 0) return <p>No subjects added yet.</p>;
 
@@ -24,12 +24,14 @@ export default function Attendencecard({ subject = [] }) {
                 <strong>{item.day}</strong> — {item.time}
               </li>
             ))}
+            <div>
+              <Button title="Present" />
+              <Button title="Absent" />
+              <Button title="Canceled" />
+            </div>
           </ul>
         </div>
       ))}
-      <div>
-        <Button />
-      </div>
     </div>
   );
 }
