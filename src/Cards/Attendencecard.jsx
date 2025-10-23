@@ -1,7 +1,15 @@
-import React from "react";
+import React, { useState } from "react";
 import Button from "../Common_Componenets/Common_Button/Button";
+
 export default function Attendencecard({ subject = [] }) {
   if (subject.length === 0) return <p>No subjects added yet.</p>;
+
+  const [Class, setClass] = useState("");
+
+  const classAttend = (status) => {
+    setClass(status);
+    console.log("Class Attendance Status:", status);
+  };
 
   return (
     <div>
@@ -24,14 +32,20 @@ export default function Attendencecard({ subject = [] }) {
                 <strong>{item.day}</strong> — {item.time}
               </li>
             ))}
+
             <div>
-              <Button title="Present" />
-              <Button title="Absent" />
-              <Button title="Canceled" />
+              <Button title="Present" onClick={() => classAttend("Present")} />
+              <Button title="Absent" onClick={() => classAttend("Absent")} />
+              <Button
+                title="Canceled"
+                onClick={() => classAttend("Canceled")}
+              />
             </div>
           </ul>
         </div>
       ))}
+
+      {Class && <p>Last action: {Class}</p>}
     </div>
   );
 }
