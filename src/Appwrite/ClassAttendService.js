@@ -128,7 +128,7 @@ export class ClassAttendService {
       const response = await this.databases.listDocuments(
         this.databasesId,
         this.attendClassesCollection,
-        [Query.equal("UserID", userId), Query.equal("SubjectID", subjectId)]
+        [Query.equal("SubjectID", subjectId), Query.equal("UserID", userId)]
       );
       return response.documents;
     } catch (error) {
@@ -137,12 +137,16 @@ export class ClassAttendService {
     }
   }
 
-  async getAttendanceByDate(userId, date) {
+  async getAttendanceByDate(userId, date, subjectId) {
     try {
       const response = await this.databases.listDocuments(
         this.databasesId,
         this.attendClassesCollection,
-        [Query.equal("UserID", userId), Query.equal("ClassDate", date)]
+        [
+          Query.equal("UserID", userId),
+          Query.equal("ClassDate", date),
+          Query.equal("SubjectID", subjectId),
+        ]
       );
       return response.documents;
     } catch (error) {

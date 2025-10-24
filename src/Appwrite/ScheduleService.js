@@ -124,6 +124,7 @@ export class ScheduleService {
           );
           if (todaySchedules.length > 0) {
             todaysclasses.push({
+              userId: userId,
               subjectId: subject.$id,
               subjectName: subject.SubjectName,
               schedules: todaySchedules,
@@ -131,6 +132,7 @@ export class ScheduleService {
           }
         }
       });
+      console.log("Today's Classes:", todaysclasses);
       return todaysclasses;
     } catch (error) {
       console.error("Error fetching today's classes:", error.message);
