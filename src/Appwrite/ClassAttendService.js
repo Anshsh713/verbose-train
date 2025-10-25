@@ -182,7 +182,7 @@ export class ClassAttendService {
           UserID: userId,
           SubjectID: SubjectId,
           ClassDate: date,
-          Status: "Not",
+          Status: "NOT",
           Time: time,
           Day: day,
         }

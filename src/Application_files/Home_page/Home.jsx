@@ -13,7 +13,6 @@ function Home() {
   const toggleshowing = () => {
     setaddSubject(!addSubject);
   };
-
   useEffect(() => {
     const fetchSubject = async () => {
       try {

@@ -91,7 +91,7 @@ export class ScheduleService {
 
   async getTodayClasses(userId) {
     try {
-      const Today = new Date();
+      const today = new Date();
       const dayNames = [
         "Sunday",
         "Monday",
@@ -101,39 +101,46 @@ export class ScheduleService {
         "Friday",
         "Saturday",
       ];
-      const todayName = dayNames[Today.getDay()];
+      const todayName = dayNames[today.getDay()].toLowerCase();
 
+      // Fetch all subjects for the user
       const response = await this.databases.listDocuments(
         conf.appwriteDatabaseID,
         this.ScheduleCollection,
         [Query.equal("UserID", userId)]
       );
-      const Subjects = response.documents;
-      const todaysclasses = [];
-      Subjects.forEach((subject) => {
-        if (subject.ClassesSchedule && Array.isArray(subject.ClassesSchedule)) {
-          const Schedule = subject.ClassesSchedule.map((item) => {
-            try {
-              return JSON.parse(item);
-            } catch (error) {
-              return null;
+
+      const todaysClasses = [];
+
+      for (const subject of response.documents) {
+        if (!subject.ClassesSchedule || !Array.isArray(subject.ClassesSchedule))
+          continue;
+
+        // Parse schedules and filter today's schedules in one go
+        const todaySchedules = [];
+        for (const item of subject.ClassesSchedule) {
+          try {
+            const cls = JSON.parse(item);
+            if (cls.day && cls.day.toLowerCase() === todayName) {
+              todaySchedules.push(cls);
             }
-          }).filter(Boolean);
-          const todaySchedules = Schedule.filter(
-            (cls) => cls.day.toLowerCase() === todayName.toLowerCase()
-          );
-          if (todaySchedules.length > 0) {
-            todaysclasses.push({
-              userId: userId,
-              subjectId: subject.$id,
-              subjectName: subject.SubjectName,
-              schedules: todaySchedules,
-            });
+          } catch (error) {
+            continue; // skip invalid JSON
           }
         }
-      });
-      console.log("Today's Classes:", todaysclasses);
-      return todaysclasses;
+
+        if (todaySchedules.length) {
+          todaysClasses.push({
+            userId,
+            subjectId: subject.$id,
+            subjectName: subject.SubjectName,
+            schedules: todaySchedules,
+          });
+        }
+      }
+
+      console.log("Today's Classes:", todaysClasses);
+      return todaysClasses;
     } catch (error) {
       console.error("Error fetching today's classes:", error.message);
       throw error;

@@ -1,56 +1,71 @@
-// Commit: Added per-schedule attendance tracking, conditional button hiding, and lastAction updates
-
 import React, { useEffect, useState } from "react";
 import Button from "../Common_Componenets/Common_Button/Button";
 import classAttendService from "../Appwrite/ClassAttendService.js";
 
 export default function Attendencecard({ subject = [] }) {
-  // State to store the last action message (e.g., "Marked Present")
   const [lastAction, setLastAction] = useState("");
-
-  // State to store attendance records per schedule (unique key per subject + day + time)
-  const [attendanceRecords, setAttendanceRecords] = useState([]);
-
-  // Get today's date in YYYY-MM-DD format
+  const [attendanceRecords, setAttendanceRecords] = useState({});
   const today = new Date().toISOString().split("T")[0];
 
   useEffect(() => {
-    const fetchAttendance = async () => {
+    const initAttendance = async () => {
       try {
-        const records = {}; // object to store attendance per schedule
+        const allRecords = {};
 
-        for (const subj of subject) {
-          // Get today's attendance for this subject from backend
-          const data = await classAttendService.getAttendanceByDate(
-            subj.userId,
-            today,
-            subj.subjectId
-          );
+        // Map each subject to a promise for fetching + marking NOT
+        await Promise.all(
+          subject.map(async (subj) => {
+            // 1️⃣ Fetch today's attendance for this subject
+            const data = await classAttendService.getAttendanceByDate(
+              subj.userId,
+              today,
+              subj.subjectId
+            );
 
-          // Loop through fetched attendance and store in records
-          data.forEach((rec) => {
-            // Create unique key for each schedule
-            const key = `${subj.subjectId}_${rec.ClassDay}_${rec.ClassTime}`;
-            records[key] = rec; // store the record
-          });
-        }
+            // Store fetched attendance
+            data.forEach((rec) => {
+              const key = `${subj.subjectId}_${rec.ClassDay}_${rec.ClassTime}`;
+              allRecords[key] = rec;
+            });
 
-        // Update state so UI can render marked attendance
-        setAttendanceRecords(records);
+            // 2️⃣ Mark unmarked schedules as NOT in parallel
+            await Promise.all(
+              (subj.schedules || []).map(async (schedule) => {
+                const key = `${subj.subjectId}_${schedule.day}_${schedule.time}`;
+                if (!allRecords[key]) {
+                  const res = await classAttendService.markAsNot(
+                    subj.userId,
+                    subj.subjectId,
+                    schedule.day,
+                    schedule.time,
+                    today
+                  );
+                  if (res.success) {
+                    allRecords[key] = {
+                      Status: "NOT",
+                      ClassDay: schedule.day,
+                      ClassTime: schedule.time,
+                    };
+                  }
+                }
+              })
+            );
+          })
+        );
 
-        console.log("Fetched attendance records:", records);
+        // Update state once after all API calls complete
+        setAttendanceRecords(allRecords);
+        console.log("Attendance initialized:", allRecords);
       } catch (error) {
-        console.error("Error fetching attendance:", error);
+        console.error("Error initializing attendance:", error);
       }
     };
 
-    if (subject.length) fetchAttendance();
+    if (subject.length) initAttendance();
   }, [subject, today]);
 
-  // 2️⃣ Handle marking attendance (Present, Absent, Canceled)
   const handleAttendance = async (status, subj, schedule) => {
     try {
-      // Call service to mark attendance in the backend
       await classAttendService.markAttendance(
         subj.userId,
         subj.subjectName,
@@ -61,10 +76,7 @@ export default function Attendencecard({ subject = [] }) {
         status
       );
 
-      // Create the same unique key as used in fetchAttendance
       const key = `${subj.subjectId}_${schedule.day}_${schedule.time}`;
-
-      // Update local state so UI reflects the change immediately
       setAttendanceRecords((prev) => ({
         ...prev,
         [key]: {
@@ -74,7 +86,6 @@ export default function Attendencecard({ subject = [] }) {
         },
       }));
 
-      // Update last action message for user feedback
       setLastAction(
         `Marked "${status}" for ${subj.subjectName} on ${schedule.day} at ${schedule.time}`
       );
@@ -87,8 +98,6 @@ export default function Attendencecard({ subject = [] }) {
   return (
     <div>
       <h2>Your Subjects</h2>
-
-      {/* Loop through each subject */}
       {subject.map((subj) => (
         <div
           key={subj.subjectId}
@@ -100,19 +109,15 @@ export default function Attendencecard({ subject = [] }) {
           }}
         >
           <h3>{subj.subjectName}</h3>
-
           <ul>
-            {/* Loop through each schedule for the subject */}
             {subj.schedules?.map((schedule, index) => {
-              // Create unique key to check attendance per schedule
               const key = `${subj.subjectId}_${schedule.day}_${schedule.time}`;
-              const record = attendanceRecords[key]; // Get attendance info for this schedule
+              const record = attendanceRecords[key];
 
               return (
                 <li key={index}>
                   <strong>{schedule.day}</strong> — {schedule.time}
                   <div style={{ marginTop: "5px" }}>
-                    {/* If attendance already marked, show status; else show buttons */}
                     {record ? (
                       <span>Your attendance is marked: {record.Status}</span>
                     ) : (
@@ -144,8 +149,6 @@ export default function Attendencecard({ subject = [] }) {
           </ul>
         </div>
       ))}
-
-      {/* Show the last action feedback */}
       {lastAction && <p>Last action: {lastAction}</p>}
     </div>
   );

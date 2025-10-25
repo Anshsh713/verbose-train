@@ -14,6 +14,9 @@ function Header() {
           <li>
             <NavLink to="/planner">Day Planner</NavLink>
           </li>
+          <li>
+            <NavLink to="/History">History</NavLink>
+          </li>
         </ul>
       </nav>
     </header>
