@@ -10,14 +10,14 @@ export default function AuthLayout({ children, authentication = true }) {
   useEffect(() => {
     if (authStatus === null) return;
     if (authentication && !authStatus) {
-      navigate("/about"); 
+      navigate("/about");
     } else if (!authentication && authStatus) {
       navigate("/home");
     }
     setLoading(false);
   }, [authStatus, navigate, authentication]);
 
-  if (loading) return null; 
+  if (loading) return null;
 
   return <>{children}</>;
 }
