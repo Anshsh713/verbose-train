@@ -66,6 +66,29 @@ export class ClassAttendService {
     }
   }
 
+  async addExtreClass(data) {
+    try {
+      const response = await this.databases.createDocument(
+        this.databasesId,
+        this.attendClassesCollection,
+        "unique()",
+        {
+          UserID: data.UserID,
+          SubjectID: data.SubjectID,
+          SubjectName: data.SubjectName,
+          ClassDay: data.ClassDay,
+          ClassTime: data.ClassTime,
+          ClassDate: data.ClassDate,
+          Status: data.Status,
+        }
+      );
+      return response;
+    } catch (error) {
+      console.error("Error adding extra class : ", error.message);
+      throw error;
+    }
+  }
+
   async updateAttendance(attendanceId, data) {
     try {
       const record = await this.databases.getDocument(
@@ -207,11 +230,12 @@ export class ClassAttendService {
         this.attendClassesCollection,
         [Query.equal("SubjectID", subjectId), Query.equal("UserID", userId)]
       );
-
+      const totalRecord = response.documents.length;
+      if (totalRecord === 0) return 0;
       const totalPresent = response.documents.filter(
         (doc) => doc.Status === "Present"
       ).length;
-      const TotalPercentage = (totalPresent / response.documents.length) * 100;
+      const TotalPercentage = (totalPresent / totalRecord) * 100;
       return TotalPercentage.toFixed(2); // return the count
     } catch (error) {
       console.error("Not able to Get Your Attendance:", error.message);
