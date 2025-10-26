@@ -200,6 +200,24 @@ export class ClassAttendService {
       throw error;
     }
   }
+  async TotalAttendance(userId, subjectId) {
+    try {
+      const response = await this.databases.listDocuments(
+        this.databasesId,
+        this.attendClassesCollection,
+        [Query.equal("SubjectID", subjectId), Query.equal("UserID", userId)]
+      );
+
+      const totalPresent = response.documents.filter(
+        (doc) => doc.Status === "Present"
+      ).length;
+      const TotalPercentage = (totalPresent / response.documents.length) * 100;
+      return TotalPercentage.toFixed(2); // return the count
+    } catch (error) {
+      console.error("Not able to Get Your Attendance:", error.message);
+      return 0; // return 0 in case of error
+    }
+  }
 }
 
 const classAttendService = new ClassAttendService();
