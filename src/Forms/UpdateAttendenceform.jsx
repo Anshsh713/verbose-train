@@ -2,10 +2,12 @@ import React, { useState } from "react";
 import Input from "../Common_Componenets/Common_Input/Input";
 import Button from "../Common_Componenets/Common_Button/Button";
 
-export default function UpdateAttendenceform() {
+export default function UpdateAttendenceform({ updateClass }) {
   const [status, setStatus] = useState("");
-  const handleUpdate = () => {
-    console.log("Update");
+  const handleUpdate = (e) => {
+    e.preventDefault();
+
+    if (updateClass) updateClass({ Status: status });
   };
   return (
     <form onSubmit={handleUpdate}>
