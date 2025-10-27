@@ -228,7 +228,11 @@ export class ClassAttendService {
       const response = await this.databases.listDocuments(
         this.databasesId,
         this.attendClassesCollection,
-        [Query.equal("SubjectID", subjectId), Query.equal("UserID", userId)]
+        [
+          Query.equal("SubjectID", subjectId),
+          Query.equal("UserID", userId),
+          Query.notEqual("Status", "Canceled"),
+        ]
       );
       const totalRecord = response.documents.length;
       if (totalRecord === 0) return 0;

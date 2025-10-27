@@ -1,18 +1,20 @@
 import React, { useEffect, useState } from "react";
 import Button from "../Common_Componenets/Common_Button/Button";
 import classAttendService from "../Appwrite/ClassAttendService.js";
-
-export default function Attendencecard({ subject = [] }) {
+import UpdateAttendenceform from "../Forms/UpdateAttendenceform.jsx";
+export default function Attendencecard({ subject = [], onAttendenceMarked }) {
   const [lastAction, setLastAction] = useState("");
   const [attendanceRecords, setAttendanceRecords] = useState({});
   const today = new Date().toISOString().split("T")[0];
-
+  const [updateattendence, setUpdateAttendence] = useState(false);
+  const toggleupdateattendence = () => {
+    setUpdateAttendence(!updateattendence);
+  };
   useEffect(() => {
     const initAttendance = async () => {
       try {
         const allRecords = {};
-
-        // Map each subject to a promise for fetching + marking NOT
+        // Map each subject to a promise for fetching
         await Promise.all(
           subject.map(async (subj) => {
             // 1️⃣ Fetch today's attendance for this subject
@@ -27,29 +29,6 @@ export default function Attendencecard({ subject = [] }) {
               const key = `${subj.subjectId}_${rec.ClassDay}_${rec.ClassTime}`;
               allRecords[key] = rec;
             });
-
-            // 2️⃣ Mark unmarked schedules as NOT in parallel
-            await Promise.all(
-              (subj.schedules || []).map(async (schedule) => {
-                const key = `${subj.subjectId}_${schedule.day}_${schedule.time}`;
-                if (!allRecords[key]) {
-                  const res = await classAttendService.markAsNot(
-                    subj.userId,
-                    subj.subjectId,
-                    schedule.day,
-                    schedule.time,
-                    today
-                  );
-                  if (res.success) {
-                    allRecords[key] = {
-                      Status: "NOT",
-                      ClassDay: schedule.day,
-                      ClassTime: schedule.time,
-                    };
-                  }
-                }
-              })
-            );
           })
         );
 
@@ -85,7 +64,7 @@ export default function Attendencecard({ subject = [] }) {
           ClassTime: schedule.time,
         },
       }));
-
+      if (onAttendenceMarked) onAttendenceMarked();
       setLastAction(
         `Marked "${status}" for ${subj.subjectName} on ${schedule.day} at ${schedule.time}`
       );
@@ -119,7 +98,14 @@ export default function Attendencecard({ subject = [] }) {
                   <strong>{schedule.day}</strong> — {schedule.time}
                   <div style={{ marginTop: "5px" }}>
                     {record ? (
-                      <span>Your attendance is marked: {record.Status}</span>
+                      <div>
+                        <span>Your attendance is marked: {record.Status}</span>
+                        <Button
+                          title="Mistake ?"
+                          onClick={toggleupdateattendence}
+                        />
+                        {updateattendence && <UpdateAttendenceform />}
+                      </div>
                     ) : (
                       <>
                         <Button

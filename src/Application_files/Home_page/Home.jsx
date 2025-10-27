@@ -12,6 +12,10 @@ function Home() {
   const [subject, setsubject] = useState([]);
   const [subject_for_attendence, setsubject_for_attendence] = useState([]);
   const [userId, setuserId] = useState("");
+  const [refresh_Attendence, setRefresh_Attendence] = useState(false);
+  const handleAttendanceRefresh = () => {
+    setRefresh_Attendence((prev) => !prev);
+  };
   const toggleshowing = () => {
     setaddSubject(!addSubject);
   };
@@ -53,7 +57,10 @@ function Home() {
   return (
     <>
       <div>
-        <Attendencecard subject={subject} />
+        <Attendencecard
+          subject={subject}
+          onAttendenceMarked={handleAttendanceRefresh}
+        />
         <Button title="Add" className="Adding" onClick={toggleshowing} />
         {addSubject && <Attendencefrom onSubjectAdded={refreshSubjects} />}
       </div>
@@ -64,6 +71,7 @@ function Home() {
               subjectId={subj.$id}
               userId={subj.UserID}
               subjectName={subj.SubjectName}
+              refresh_Trigger={refresh_Attendence}
             />
           </div>
         ))}

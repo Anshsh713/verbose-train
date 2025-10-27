@@ -2,7 +2,12 @@ import React, { useEffect, useState } from "react";
 import classAttendService from "../../Appwrite/ClassAttendService.js";
 import Button from "../../Common_Componenets/Common_Button/Button.jsx";
 import ExtraClassform from "../../Forms/ExtraClassform.jsx";
-export default function Total_Attendence({ subjectId, userId, subjectName }) {
+export default function Total_Attendence({
+  subjectId,
+  userId,
+  subjectName,
+  refresh_Trigger,
+}) {
   const [totalAttendance, setTotalAttendance] = useState(0);
   const [extraclass, setExtraClass] = useState(false);
   const ExtraClass = () => {
@@ -17,7 +22,7 @@ export default function Total_Attendence({ subjectId, userId, subjectName }) {
   };
   useEffect(() => {
     fetchTotalAttendance();
-  }, [userId, subjectId]);
+  }, [userId, subjectId, refresh_Trigger]);
 
   const handleExtraClass = async (data) => {
     try {
