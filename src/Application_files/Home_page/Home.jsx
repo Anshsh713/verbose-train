@@ -2,16 +2,11 @@ import React, { useEffect, useState } from "react";
 import Button from "../../Common_Componenets/Common_Button/Button.jsx";
 import Attendencefrom from "../../Forms/Attendenceform.jsx";
 import Attendencecard from "../../Cards/Attendencecard.jsx";
-import { useUser } from "../../Context/UserContext.jsx";
-import scheduleService, {
-  ScheduleService,
-} from "../../Appwrite/ScheduleService.js";
+import { useSchedule } from "../../Context/ScheduleContext.jsx";
 import Total_Attendence from "../Total_Attendence/Attendence.jsx";
 function Home() {
+  const { allSubjects, todayClasses, refreshSchedule } = useSchedule();
   const [addSubject, setaddSubject] = useState(false);
-  const [subject, setsubject] = useState([]);
-  const [subject_for_attendence, setsubject_for_attendence] = useState([]);
-  const { user } = useUser();
   const [refresh_Attendence, setRefresh_Attendence] = useState(false);
   const handleAttendanceRefresh = () => {
     setRefresh_Attendence((prev) => !prev);
@@ -19,51 +14,18 @@ function Home() {
   const toggleshowing = () => {
     setaddSubject(!addSubject);
   };
-  useEffect(() => {
-    const fetchSubject = async () => {
-      try {
-        if (user) {
-          const data = await scheduleService.getTodayClasses(user.$id);
-          const attendence = await scheduleService.getUserSubject(user.$id);
-          if (data && attendence) {
-            setsubject(data);
-            setsubject_for_attendence(attendence);
-            console.log("Subject", data);
-            console.log("Attendence Subject", attendence);
-          } else {
-            setsubject([]);
-            setsubject_for_attendence([]);
-          }
-        }
-      } catch (error) {
-        console.error("Error loading subjects");
-      }
-    };
-    fetchSubject();
-  }, []);
-
-  const refreshSubjects = async () => {
-    if (!user.$id) return;
-    const data = await scheduleService.getTodayClasses(user.$id);
-    if (data) {
-      setsubject(data);
-    } else {
-      setsubject([]);
-    }
-    setaddSubject(false);
-  };
   return (
     <>
       <div>
         <Attendencecard
-          subject={subject}
+          subject={todayClasses}
           onAttendenceMarked={handleAttendanceRefresh}
         />
         <Button title="Add" className="Adding" onClick={toggleshowing} />
-        {addSubject && <Attendencefrom onSubjectAdded={refreshSubjects} />}
+        {addSubject && <Attendencefrom onSubjectAdded={refreshSchedule} />}
       </div>
       <div>
-        {subject_for_attendence.map((subj) => (
+        {allSubjects.map((subj) => (
           <div key={subj.$id}>
             <Total_Attendence
               subjectId={subj.$id}

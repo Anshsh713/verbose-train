@@ -1,76 +1,31 @@
 import React, { useEffect, useState } from "react";
 import Button from "../Common_Componenets/Common_Button/Button";
-import classAttendService from "../Appwrite/ClassAttendService.js";
 import UpdateAttendenceform from "../Forms/UpdateAttendenceform.jsx";
+import { useAttendance } from "../Context/AttendenceContext.jsx";
 export default function Attendencecard({ subject = [], onAttendenceMarked }) {
+  const { attendanceRecords, fetchAttendance, markAttendance } =
+    useAttendance();
   const [lastAction, setLastAction] = useState("");
-  const [attendanceRecords, setAttendanceRecords] = useState({});
-  const today = new Date().toISOString().split("T")[0];
   const [updateattendence, setUpdateAttendence] = useState(false);
   const toggleupdateattendence = () => {
     setUpdateAttendence(!updateattendence);
   };
   useEffect(() => {
-    const initAttendance = async () => {
-      try {
-        const allRecords = {};
-        // Map each subject to a promise for fetching
-        await Promise.all(
-          subject.map(async (subj) => {
-            // 1️⃣ Fetch today's attendance for this subject
-            const data = await classAttendService.getAttendanceByDate(
-              subj.userId,
-              today,
-              subj.subjectId
-            );
-
-            // Store fetched attendance
-            data.forEach((rec) => {
-              const key = `${subj.subjectId}_${rec.ClassDay}_${rec.ClassTime}`;
-              allRecords[key] = rec;
-            });
-          })
-        );
-
-        // Update state once after all API calls complete
-        setAttendanceRecords(allRecords);
-        console.log("Attendance initialized:", allRecords);
-      } catch (error) {
-        console.error("Error initializing attendance:", error);
-      }
-    };
-
-    if (subject.length) initAttendance();
-  }, [subject, today]);
+    if (subject.length > 0) {
+      fetchAttendance(subject);
+    }
+  }, [subject]);
 
   const handleAttendance = async (status, subj, schedule) => {
     try {
-      await classAttendService.markAttendance(
-        subj.userId,
-        subj.subjectName,
-        subj.subjectId,
-        schedule.day,
-        schedule.time,
-        today,
-        status
-      );
-
-      const key = `${subj.subjectId}_${schedule.day}_${schedule.time}`;
-      setAttendanceRecords((prev) => ({
-        ...prev,
-        [key]: {
-          Status: status,
-          ClassDay: schedule.day,
-          ClassTime: schedule.time,
-        },
-      }));
+      await markAttendance(status, subj, schedule);
       if (onAttendenceMarked) onAttendenceMarked();
       setLastAction(
         `Marked "${status}" for ${subj.subjectName} on ${schedule.day} at ${schedule.time}`
       );
     } catch (error) {
       console.error("Error marking attendance:", error);
-      setLastAction(`Error marking attendance: ${error.message}`);
+      setLastAction(`Error: ${error.message}`);
     }
   };
 
@@ -91,7 +46,7 @@ export default function Attendencecard({ subject = [], onAttendenceMarked }) {
           <ul>
             {subj.schedules?.map((schedule, index) => {
               const key = `${subj.subjectId}_${schedule.day}_${schedule.time}`;
-              const record = attendanceRecords[key];
+              const record = attendanceRecords?.[key] || null;
 
               return (
                 <li key={index}>

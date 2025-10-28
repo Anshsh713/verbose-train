@@ -8,6 +8,8 @@ import {
 import { Provider } from "react-redux"; // it help to know page that user login or not
 import store from "./Store/store.js"; // as from store file authslice file is used
 import { UserProvider } from "./Context/UserContext.jsx";
+import { ScheduleProvider } from "./Context/ScheduleContext.jsx";
+import { AttendanceProvider } from "./Context/AttendenceContext.jsx";
 import App from "./App.jsx";
 import Home from "./Application_files/Home_page/Home.jsx";
 import Profile from "./Application_files/User_Profile/Profile.jsx";
@@ -76,7 +78,11 @@ createRoot(document.getElementById("root")).render(
   <React.StrictMode>
     <Provider store={store}>
       <UserProvider>
-        <RouterProvider router={router} />
+        <ScheduleProvider>
+          <AttendanceProvider>
+            <RouterProvider router={router} />
+          </AttendanceProvider>
+        </ScheduleProvider>
       </UserProvider>
     </Provider>
   </React.StrictMode>
