@@ -7,7 +7,7 @@ import {
 } from "react-router-dom";
 import { Provider } from "react-redux"; // it help to know page that user login or not
 import store from "./Store/store.js"; // as from store file authslice file is used
-
+import { UserProvider } from "./Context/UserContext.jsx";
 import App from "./App.jsx";
 import Home from "./Application_files/Home_page/Home.jsx";
 import Profile from "./Application_files/User_Profile/Profile.jsx";
@@ -75,7 +75,9 @@ const router = createBrowserRouter([
 createRoot(document.getElementById("root")).render(
   <React.StrictMode>
     <Provider store={store}>
-      <RouterProvider router={router} />
+      <UserProvider>
+        <RouterProvider router={router} />
+      </UserProvider>
     </Provider>
   </React.StrictMode>
 );

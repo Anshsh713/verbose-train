@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import Button from "../../Common_Componenets/Common_Button/Button.jsx";
 import Attendencefrom from "../../Forms/Attendenceform.jsx";
 import Attendencecard from "../../Cards/Attendencecard.jsx";
-import authService from "../../Appwrite/AuthService.js";
+import { useUser } from "../../Context/UserContext.jsx";
 import scheduleService, {
   ScheduleService,
 } from "../../Appwrite/ScheduleService.js";
@@ -11,7 +11,7 @@ function Home() {
   const [addSubject, setaddSubject] = useState(false);
   const [subject, setsubject] = useState([]);
   const [subject_for_attendence, setsubject_for_attendence] = useState([]);
-  const [userId, setuserId] = useState("");
+  const { user } = useUser();
   const [refresh_Attendence, setRefresh_Attendence] = useState(false);
   const handleAttendanceRefresh = () => {
     setRefresh_Attendence((prev) => !prev);
@@ -22,9 +22,7 @@ function Home() {
   useEffect(() => {
     const fetchSubject = async () => {
       try {
-        const user = await authService.getCurrentUser();
         if (user) {
-          setuserId(user.$id);
           const data = await scheduleService.getTodayClasses(user.$id);
           const attendence = await scheduleService.getUserSubject(user.$id);
           if (data && attendence) {
@@ -45,8 +43,8 @@ function Home() {
   }, []);
 
   const refreshSubjects = async () => {
-    if (!userId) return;
-    const data = await scheduleService.getTodayClasses(userId);
+    if (!user.$id) return;
+    const data = await scheduleService.getTodayClasses(user.$id);
     if (data) {
       setsubject(data);
     } else {

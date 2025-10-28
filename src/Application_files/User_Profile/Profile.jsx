@@ -1,33 +1,10 @@
 import React, { useEffect, useState } from "react";
-import authService from "../../Appwrite/AuthService";
+import { useUser } from "../../Context/UserContext";
 import scheduleService from "../../Appwrite/ScheduleService";
 
 export default function Profile() {
-  const [user, setUser] = useState(null);
   const [subjects, setSubjects] = useState([]);
-
-  useEffect(() => {
-    const loadUserData = async () => {
-      try {
-        const currentUser = await authService.getCurrentUser();
-        setUser(currentUser);
-
-        if (currentUser) {
-          const data = await scheduleService.getUserSubject(currentUser.$id);
-          if (data) {
-            setSubjects(data);
-            console.log("Subject Data:", data);
-          } else {
-            setSubjects([]);
-          }
-        }
-      } catch (error) {
-        console.error("Error loading data:", error.message);
-      }
-    };
-
-    loadUserData();
-  }, []);
+  const { user } = useUser();
 
   if (!user) return <p>Loading...</p>;
 
