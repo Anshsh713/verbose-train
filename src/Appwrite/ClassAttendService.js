@@ -160,7 +160,7 @@ export class ClassAttendService {
     }
   }
 
-  async getAttendanceByDate(userId, date, subjectId) {
+  async getAttendanceByDate(userId, date, day) {
     try {
       const response = await this.databases.listDocuments(
         this.databasesId,
@@ -168,7 +168,7 @@ export class ClassAttendService {
         [
           Query.equal("UserID", userId),
           Query.equal("ClassDate", date),
-          Query.equal("SubjectID", subjectId),
+          Query.equal("ClassDay", day),
         ]
       );
       return response.documents;

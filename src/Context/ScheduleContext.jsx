@@ -10,16 +10,12 @@ export const ScheduleProvider = ({ children }) => {
   const [allSubjects, setAllSubjects] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  const CACHE_EXPIRY_MS = 1000 * 60 * 60 * 24;
+  const today = new Date().toISOString().split("T")[0];
 
   const loadfromcache = () => {
     try {
       const cache = JSON.parse(localStorage.getItem("ClassCache"));
-      if (
-        cache &&
-        cache.userId === user?.$id &&
-        Date.now() - cache.timestamp < CACHE_EXPIRY_MS
-      ) {
+      if (cache && cache.userId === user?.$id && cache.timestamp === today) {
         setTodayClasses(cache.todayClasses || []);
         setAllSubjects(cache.allSubjects || []);
         setLoading(false);
@@ -35,7 +31,7 @@ export const ScheduleProvider = ({ children }) => {
   const saveToCache = (data) => {
     const cache = {
       userId: user?.$id,
-      timestamp: Date.now(),
+      timestamp: today,
       ...data,
     };
     localStorage.setItem("ClassCache", JSON.stringify(cache));
