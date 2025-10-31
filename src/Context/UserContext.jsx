@@ -3,7 +3,7 @@ import React, {
   useContext,
   useState,
   useEffect,
-  Children,
+  children,
 } from "react";
 import authService from "../Appwrite/AuthService";
 

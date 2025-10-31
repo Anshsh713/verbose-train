@@ -10,14 +10,54 @@ export const ScheduleProvider = ({ children }) => {
   const [allSubjects, setAllSubjects] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  const fetchScheduleData = async () => {
+  const CACHE_EXPIRY_MS = 1000 * 60 * 60 * 24;
+
+  const loadfromcache = () => {
+    try {
+      const cache = JSON.parse(localStorage.getItem("ClassCache"));
+      if (
+        cache &&
+        cache.userId === user?.$id &&
+        Date.now() - cache.timestamp < CACHE_EXPIRY_MS
+      ) {
+        setTodayClasses(cache.todayClasses || []);
+        setAllSubjects(cache.allSubjects || []);
+        setLoading(false);
+        console.log("data got from local storage");
+        return true;
+      }
+    } catch (error) {
+      console.error("NOt able to get data : ", error);
+    }
+    return false;
+  };
+
+  const saveToCache = (data) => {
+    const cache = {
+      userId: user?.$id,
+      timestamp: Date.now(),
+      ...data,
+    };
+    localStorage.setItem("ClassCache", JSON.stringify(cache));
+  };
+
+  const fetchScheduleData = async (forceRefresh = false) => {
     if (!user) return;
     setLoading(true);
+    if (!forceRefresh && loadfromcache()) {
+      setLoading(false);
+      return;
+    }
     try {
       const todayclass = await scheduleService.getTodayClasses(user.$id);
       const subjects = await scheduleService.getUserSubject(user.$id);
       setTodayClasses(todayclass || []);
       setAllSubjects(subjects || []);
+      saveToCache({
+        todayClasses: todayclass || [],
+        allSubjects: subjects || [],
+      });
+      console.log("Fetched schedule data from Appwrite");
     } catch (error) {
       console.error("Error fetching schedule data : ", error);
     } finally {
@@ -26,7 +66,7 @@ export const ScheduleProvider = ({ children }) => {
   };
 
   const refreshSchedule = async () => {
-    await fetchScheduleData();
+    await fetchScheduleData(true);
   };
 
   useEffect(() => {

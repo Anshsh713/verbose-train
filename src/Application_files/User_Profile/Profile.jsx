@@ -1,22 +1,28 @@
 import React, { useEffect, useState } from "react";
 import { useUser } from "../../Context/UserContext";
-import scheduleService from "../../Appwrite/ScheduleService";
+import { useSchedule } from "../../Context/ScheduleContext";
 
 export default function Profile() {
-  const [subjects, setSubjects] = useState([]);
   const { user } = useUser();
+  const { allSubjects, refreshSchedule, loading } = useSchedule();
 
-  if (!user) return <p>Loading...</p>;
+  useEffect(() => {
+    if (!allSubjects || allSubjects.length === 0) {
+      refreshSchedule();
+    }
+  }, []);
+
+  if (loading) return <p>...Loading Profille</p>;
 
   return (
     <div>
       <h1>Welcome {user.name}</h1>
       <p>{user.email}</p>
 
-      {subjects.length === 0 ? (
+      {allSubjects.length === 0 ? (
         <p>No subjects found.</p>
       ) : (
-        subjects.map((subj) => (
+        allSubjects.map((subj) => (
           <div
             key={subj.$id}
             style={{
