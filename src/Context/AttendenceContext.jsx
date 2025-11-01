@@ -1,11 +1,13 @@
 import React, { createContext, useContext, useState } from "react";
 import classAttendService from "../Appwrite/ClassAttendService";
 import { useUser } from "./UserContext";
+import { useLocalStorage } from "./LocalStorageContext";
 
 const AttendanceContext = createContext();
 
 export const AttendanceProvider = ({ children }) => {
   const { user } = useUser();
+  const { LoadData, SaveData } = useLocalStorage();
   const [loading, setloading] = useState(true);
   const [attendanceRecords, setAttendanceRecords] = useState({});
   const today = new Date().toISOString().split("T")[0];
@@ -13,14 +15,8 @@ export const AttendanceProvider = ({ children }) => {
 
   const loadfromcacheforAttendence = () => {
     try {
-      const cache = JSON.parse(localStorage.getItem("AttendClassesCache"));
-      console.log("getting data : ", cache);
-      if (
-        cache &&
-        cache.userId === user?.$id &&
-        cache.timestamp === today &&
-        Object.keys(cache.attendancerecords || {}).length > 0
-      ) {
+      const cache = LoadData("AttendClassesCache");
+      if (cache) {
         setAttendanceRecords(cache.attendancerecords);
         setloading(false);
         console.log("data of attendence from local storage", attendanceRecords);
@@ -33,13 +29,9 @@ export const AttendanceProvider = ({ children }) => {
   };
 
   const saveToCache = (data) => {
-    const cache = {
-      userId: user?.$id,
-      timestamp: today,
+    SaveData("AttendClassesCache", {
       ...data,
-    };
-    console.log("Adding data : ", cache);
-    localStorage.setItem("AttendClassesCache", JSON.stringify(cache));
+    });
   };
 
   const fetchAttendance = async (subjects) => {
@@ -103,7 +95,7 @@ export const AttendanceProvider = ({ children }) => {
 
   return (
     <AttendanceContext.Provider
-      value={{ attendanceRecords, fetchAttendance, markAttendance }}
+      value={{ attendanceRecords, fetchAttendance, markAttendance, loading }}
     >
       {children}
     </AttendanceContext.Provider>

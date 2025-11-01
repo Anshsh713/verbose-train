@@ -3,7 +3,7 @@ import Button from "../Common_Componenets/Common_Button/Button";
 import UpdateAttendenceform from "../Forms/UpdateAttendenceform.jsx";
 import { useAttendance } from "../Context/AttendenceContext.jsx";
 export default function Attendencecard({ subject = [], onAttendenceMarked }) {
-  const { attendanceRecords, fetchAttendance, markAttendance } =
+  const { attendanceRecords, fetchAttendance, markAttendance, loading } =
     useAttendance();
   const [lastAction, setLastAction] = useState("");
   const [updateattendence, setUpdateAttendence] = useState(false);
@@ -28,7 +28,7 @@ export default function Attendencecard({ subject = [], onAttendenceMarked }) {
       setLastAction(`Error: ${error.message}`);
     }
   };
-
+  if (!loading) return <p>...Loading Attendence</p>;
   return (
     <div>
       <h2>Your Subjects</h2>

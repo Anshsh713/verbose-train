@@ -12,7 +12,7 @@ export default function Profile() {
     }
   }, []);
 
-  if (loading) return <p>...Loading Profille</p>;
+  if (loading) return <p>...Loading Profile</p>;
 
   return (
     <div>

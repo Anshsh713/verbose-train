@@ -1,7 +1,7 @@
 import React, { useContext, createContext, useEffect, useState } from "react";
 import scheduleService from "../Appwrite/ScheduleService.js";
 import { useUser } from "./UserContext.jsx";
-
+import { useLocalStorage } from "./LocalStorageContext.jsx";
 const ScheduleContext = createContext();
 
 export const ScheduleProvider = ({ children }) => {
@@ -9,17 +9,17 @@ export const ScheduleProvider = ({ children }) => {
   const [todayClasses, setTodayClasses] = useState([]);
   const [allSubjects, setAllSubjects] = useState([]);
   const [loading, setLoading] = useState(true);
+  const { LoadData, SaveData } = useLocalStorage();
 
   const today = new Date().toISOString().split("T")[0];
 
   const loadfromcache = () => {
     try {
-      const cache = JSON.parse(localStorage.getItem("ClassCache"));
-      if (cache && cache.userId === user?.$id && cache.timestamp === today) {
+      const cache = LoadData("ClassCache");
+      if (cache) {
         setTodayClasses(cache.todayClasses || []);
         setAllSubjects(cache.allSubjects || []);
         setLoading(false);
-        console.log("data got from local storage");
         return true;
       }
     } catch (error) {
@@ -29,12 +29,9 @@ export const ScheduleProvider = ({ children }) => {
   };
 
   const saveToCache = (data) => {
-    const cache = {
-      userId: user?.$id,
-      timestamp: today,
+    SaveData("ClassCache", {
       ...data,
-    };
-    localStorage.setItem("ClassCache", JSON.stringify(cache));
+    });
   };
 
   const fetchScheduleData = async (forceRefresh = false) => {

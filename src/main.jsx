@@ -18,6 +18,7 @@ import Login from "./Application_files/Loginin_signup/Login/Login.jsx";
 import Signup from "./Application_files/Loginin_signup/Signup/Signup.jsx";
 import AuthLayout from "./Data_management/AuthLayout.jsx";
 import "./index.css";
+import { LocalStorageProvider } from "./Context/LocalStorageContext.jsx";
 
 const router = createBrowserRouter([
   {
@@ -78,11 +79,13 @@ createRoot(document.getElementById("root")).render(
   <React.StrictMode>
     <Provider store={store}>
       <UserProvider>
-        <ScheduleProvider>
-          <AttendanceProvider>
-            <RouterProvider router={router} />
-          </AttendanceProvider>
-        </ScheduleProvider>
+        <LocalStorageProvider>
+          <ScheduleProvider>
+            <AttendanceProvider>
+              <RouterProvider router={router} />
+            </AttendanceProvider>
+          </ScheduleProvider>
+        </LocalStorageProvider>
       </UserProvider>
     </Provider>
   </React.StrictMode>
