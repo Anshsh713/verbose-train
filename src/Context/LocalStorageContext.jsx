@@ -7,8 +7,8 @@ export const LocalStorageProvider = ({ children }) => {
   const { user } = useUser();
   const [loading, setloading] = useState(true);
 
-  const CHECK_EXPIREY = new Date().toISOString().split("T")[0];
-
+  const CHECK_EXPIREY = new Date().toLocaleDateString("en-CA");
+  console.log(CHECK_EXPIREY);
   const LoadData = (key) => {
     try {
       const data = JSON.parse(localStorage.getItem(key));

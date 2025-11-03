@@ -16,7 +16,7 @@ export default function Total_Attendence({ subject = [], refresh_Trigger }) {
     <div>
       <h2>Your Attendence</h2>
       {subject.map((subj) => (
-        <div key={subj.subjectId}>
+        <div key={subj.$id}>
           <h2>Total Attendance for Subject : {subj.SubjectName}</h2>
           <p>{totalAttendance[subj.$id] || 0}%</p>
           <Button title="+ extra Class" onClick={ExtraClass} />
