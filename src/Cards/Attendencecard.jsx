@@ -28,7 +28,6 @@ export default function Attendencecard({ subject = [], onAttendenceMarked }) {
       setLastAction(`Error: ${error.message}`);
     }
   };
-  if (!loading) return <p>...Loading Attendence</p>;
   return (
     <div>
       <h2>Your Subjects</h2>

@@ -1,58 +1,33 @@
 import React, { useEffect, useState } from "react";
-import classAttendService from "../../Appwrite/ClassAttendService.js";
 import Button from "../../Common_Componenets/Common_Button/Button.jsx";
 import ExtraClassform from "../../Forms/ExtraClassform.jsx";
-export default function Total_Attendence({
-  subjectId,
-  userId,
-  subjectName,
-  refresh_Trigger,
-}) {
-  const [totalAttendance, setTotalAttendance] = useState(0);
+import { useAttendance } from "../../Context/AttendenceContext.jsx";
+export default function Total_Attendence({ subject = [], refresh_Trigger }) {
+  const { TotalAttendence, totalAttendance } = useAttendance();
   const [extraclass, setExtraClass] = useState(false);
   const ExtraClass = () => {
     setExtraClass(!extraclass);
   };
-  const fetchTotalAttendance = async () => {
-    const attendance = await classAttendService.TotalAttendance(
-      userId,
-      subjectId
-    );
-    setTotalAttendance(attendance);
-  };
   useEffect(() => {
-    fetchTotalAttendance();
-  }, [userId, subjectId, refresh_Trigger]);
-
-  const handleExtraClass = async (data) => {
-    try {
-      await classAttendService.addExtreClass({
-        UserID: userId,
-        SubjectName: subjectName,
-        SubjectID: subjectId,
-        ClassDay: data.day,
-        ClassTime: data.time,
-        ClassDate: data.date,
-        Status: data.status,
-      });
-      ExtraClass();
-      fetchTotalAttendance();
-    } catch (error) {
-      console.error("Error adding extra class : ", error);
-    }
-  };
-
+    TotalAttendence();
+  }, [refresh_Trigger, subject]);
+  if (!subject.length) return <p>No subjects found.</p>;
   return (
     <div>
-      <h2>Total Attendance for Subject : {subjectName}</h2>
-      <p>{totalAttendance}%</p>
-      <Button title="+ extra Class" onClick={ExtraClass} />
-      {extraclass && (
-        <div>
-          <ExtraClassform onextraClass={handleExtraClass} />
-          <Button title="Cancel" onClick={ExtraClass} />
+      <h2>Your Attendence</h2>
+      {subject.map((subj) => (
+        <div key={subj.subjectId}>
+          <h2>Total Attendance for Subject : {subj.SubjectName}</h2>
+          <p>{totalAttendance[subj.$id] || 0}%</p>
+          <Button title="+ extra Class" onClick={ExtraClass} />
+          {extraclass && (
+            <div>
+              <ExtraClassform onextraClass={handleExtraClass} />
+              <Button title="Cancel" onClick={ExtraClass} />
+            </div>
+          )}
         </div>
-      )}
+      ))}
     </div>
   );
 }

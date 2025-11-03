@@ -2,16 +2,19 @@ import React, { createContext, useContext, useState } from "react";
 import classAttendService from "../Appwrite/ClassAttendService";
 import { useUser } from "./UserContext";
 import { useLocalStorage } from "./LocalStorageContext";
+import { useSchedule } from "./ScheduleContext";
 
 const AttendanceContext = createContext();
 
 export const AttendanceProvider = ({ children }) => {
+  const { allSubjects } = useSchedule();
   const { user } = useUser();
   const { LoadData, SaveData } = useLocalStorage();
   const [loading, setloading] = useState(true);
   const [attendanceRecords, setAttendanceRecords] = useState({});
   const today = new Date().toISOString().split("T")[0];
   const dayName = new Date().toLocaleDateString("en-US", { weekday: "long" });
+  const [totalAttendance, setTotalAttendance] = useState({});
 
   const loadfromcacheforAttendence = () => {
     try {
@@ -32,6 +35,24 @@ export const AttendanceProvider = ({ children }) => {
     SaveData("AttendClassesCache", {
       ...data,
     });
+  };
+
+  const TotalAttendence = async () => {
+    if (!user || !allSubjects?.length) return;
+    setloading(true);
+    try {
+      const allAttendence = {};
+      for (const subj of allSubjects) {
+        const data = await classAttendService.TotalAttendance(
+          user.$id,
+          subj.$id
+        );
+        console.log("data : ", data);
+        allAttendence[subj.$id] = data;
+      }
+      console.log("allAttendence : ", allAttendence);
+      setTotalAttendance(allAttendence);
+    } catch (error) {}
   };
 
   const fetchAttendance = async (subjects) => {
@@ -95,7 +116,14 @@ export const AttendanceProvider = ({ children }) => {
 
   return (
     <AttendanceContext.Provider
-      value={{ attendanceRecords, fetchAttendance, markAttendance, loading }}
+      value={{
+        attendanceRecords,
+        fetchAttendance,
+        markAttendance,
+        loading,
+        TotalAttendence,
+        totalAttendance,
+      }}
     >
       {children}
     </AttendanceContext.Provider>
