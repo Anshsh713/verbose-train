@@ -37,22 +37,23 @@ export const AttendanceProvider = ({ children }) => {
     });
   };
 
-  const TotalAttendence = async () => {
+  const TotalAttendence = async (subjectId) => {
     if (!user || !allSubjects?.length) return;
     setloading(true);
     try {
-      const allAttendence = {};
-      for (const subj of allSubjects) {
-        const data = await classAttendService.TotalAttendance(
-          user.$id,
-          subj.$id
-        );
-        console.log("data : ", data);
-        allAttendence[subj.$id] = data;
-      }
-      console.log("allAttendence : ", allAttendence);
-      setTotalAttendance(allAttendence);
-    } catch (error) {}
+      const data = await classAttendService.TotalAttendance(
+        user.$id,
+        subjectId
+      );
+      setTotalAttendance((prev) => ({
+        ...prev,
+        [subjectId]: data,
+      }));
+    } catch (error) {
+      console.error("Error fetching attendance:", error);
+    } finally {
+      setloading(false);
+    }
   };
 
   const fetchAttendance = async (subjects) => {

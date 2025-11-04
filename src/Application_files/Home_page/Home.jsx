@@ -25,10 +25,13 @@ function Home() {
         {addSubject && <Attendencefrom onSubjectAdded={refreshSchedule} />}
       </div>
       <div>
-        <Total_Attendence
-          subject={allSubjects}
-          refresh_Trigger={refresh_Attendence}
-        />
+        {allSubjects.map((subj) => (
+          <Total_Attendence
+            key={subj.$id}
+            subject={subj}
+            refresh_Trigger={refresh_Attendence}
+          />
+        ))}
       </div>
     </>
   );
