@@ -44,6 +44,7 @@ export const ScheduleProvider = ({ children }) => {
     try {
       const todayclass = await scheduleService.getTodayClasses(user.$id);
       const subjects = await scheduleService.getUserSubject(user.$id);
+      console.log(subjects);
       setTodayClasses(todayclass || []);
       setAllSubjects(subjects || []);
       saveToCache({

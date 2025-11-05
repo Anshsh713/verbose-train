@@ -40,6 +40,16 @@ export const AttendanceProvider = ({ children }) => {
   const TotalAttendence = async (subjectId) => {
     if (!user || !allSubjects?.length) return;
     setloading(true);
+    const Attendence_Local_Storage =
+      JSON.parse(localStorage.getItem("TotalAttendanceCache")) || {};
+    if (Attendence_Local_Storage[subjectId] !== undefined) {
+      setTotalAttendance((prev) => ({
+        ...prev,
+        [subjectId]: Attendence_Local_Storage[subjectId],
+      }));
+      setloading(false);
+      return;
+    }
     try {
       const data = await classAttendService.TotalAttendance(
         user.$id,
@@ -49,6 +59,10 @@ export const AttendanceProvider = ({ children }) => {
         ...prev,
         [subjectId]: data,
       }));
+      localStorage.setItem(
+        "TotalAttendanceCache",
+        JSON.stringify({ ...Attendence_Local_Storage, [subjectId]: data })
+      );
     } catch (error) {
       console.error("Error fetching attendance:", error);
     } finally {
@@ -110,6 +124,10 @@ export const AttendanceProvider = ({ children }) => {
 
       setAttendanceRecords(updatedRecords);
       saveToCache({ attendancerecords: updatedRecords });
+      const totalCache =
+        JSON.parse(localStorage.getItem("TotalAttendanceCache")) || {};
+      delete totalCache[subj.subjectId];
+      localStorage.setItem("TotalAttendanceCache", JSON.stringify(totalCache));
     } catch (error) {
       console.error("Error in marking attendance:", error);
     }
