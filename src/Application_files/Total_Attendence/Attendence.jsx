@@ -7,14 +7,21 @@ export default function Total_Attendence({ subject, refresh_Trigger }) {
   const { TotalAttendence, totalAttendance, handleExtraClass } =
     useAttendance();
   const [extraclass, setExtraClass] = useState(false);
-
+  const [refresh, setRefresh] = useState(false);
+  const ExtraClassSubmit = async (formData) => {
+    const success = await handleExtraClass(formData);
+    if (success) {
+      setRefresh((prev) => !prev);
+      setExtraClass(false);
+    }
+  };
   const ExtraClass = () => {
     setExtraClass((prev) => !prev);
   };
 
   useEffect(() => {
     TotalAttendence(subject.$id);
-  }, [refresh_Trigger, subject]);
+  }, [refresh_Trigger, subject, refresh]);
 
   if (!subject || !subject.$id) return <p>No subject found.</p>;
 
@@ -27,7 +34,11 @@ export default function Total_Attendence({ subject, refresh_Trigger }) {
 
       {extraclass && (
         <div>
-          <ExtraClassform onextraClass={handleExtraClass} />
+          <ExtraClassform
+            subjectID={subject.$id}
+            subjectName={subject.SubjectName}
+            onextraClass={ExtraClassSubmit}
+          />
           <Button title="Cancel" onClick={ExtraClass} />
         </div>
       )}

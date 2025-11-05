@@ -66,23 +66,22 @@ export class ClassAttendService {
     }
   }
 
-  async addExtreClass(data) {
+  async addExtraClass(userId, subjectName, subjectId, day, time, date, status) {
     try {
-      const response = await this.databases.createDocument(
+      return await this.databases.createDocument(
         this.databasesId,
         this.attendClassesCollection,
         "unique()",
         {
-          UserID: data.UserID,
-          SubjectID: data.SubjectID,
-          SubjectName: data.SubjectName,
-          ClassDay: data.ClassDay,
-          ClassTime: data.ClassTime,
-          ClassDate: data.ClassDate,
-          Status: data.Status,
+          UserID: userId,
+          SubjectID: subjectId,
+          SubjectName: subjectName,
+          ClassDay: day,
+          ClassTime: time,
+          ClassDate: date,
+          Status: status,
         }
       );
-      return response;
     } catch (error) {
       console.error("Error adding extra class : ", error.message);
       throw error;

@@ -1,22 +1,34 @@
 import React, { useState } from "react";
 import Input from "../Common_Componenets/Common_Input/Input";
 import Button from "../Common_Componenets/Common_Button/Button";
-export default function ExtraClassform({ onextraClass }) {
+export default function ExtraClassform({
+  subjectID,
+  subjectName,
+  onextraClass,
+}) {
   const [Day, setDay] = useState("");
   const [Date, setDate] = useState("");
   const [Time, setTime] = useState("");
   const [status, setStatus] = useState("");
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
 
     const data = {
+      subjectID,
+      subjectName,
       day: Day,
       date: Date,
       time: Time,
       status: status,
     };
 
-    if (onextraClass) onextraClass(data);
+    const success = await onextraClass(data);
+    if (success) {
+      setDay("");
+      setDate("");
+      setTime("");
+      setStatus("");
+    }
   };
   return (
     <form onSubmit={handleSubmit}>

@@ -129,7 +129,33 @@ export const AttendanceProvider = ({ children }) => {
       delete totalCache[subj.subjectId];
       localStorage.setItem("TotalAttendanceCache", JSON.stringify(totalCache));
     } catch (error) {
-      console.error("Error in marking attendance:", error);
+      console.log("Not Able to Mark the Attendence", error);
+    }
+  };
+
+  const handleExtraClass = async (data) => {
+    if (!user) return false;
+    try {
+      await classAttendService.addExtraClass(
+        user.$id,
+        data.subjectName,
+        data.subjectID,
+        data.day,
+        data.time,
+        data.date,
+        data.status
+      );
+
+      const totalCache =
+        JSON.parse(localStorage.getItem("TotalAttendanceCache")) || {};
+      delete totalCache[data.subjectID];
+      localStorage.setItem("TotalAttendanceCache", JSON.stringify(totalCache));
+
+      console.log("✅ Extra class added and cache cleared!");
+      return true;
+    } catch (error) {
+      console.log("❌ Error adding extra class:", error);
+      return false;
     }
   };
 
@@ -142,6 +168,7 @@ export const AttendanceProvider = ({ children }) => {
         loading,
         TotalAttendence,
         totalAttendance,
+        handleExtraClass,
       }}
     >
       {children}
