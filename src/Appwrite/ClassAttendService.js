@@ -68,7 +68,23 @@ export class ClassAttendService {
 
   async addExtraClass(userId, subjectName, subjectId, day, time, date, status) {
     try {
-      return await this.databases.createDocument(
+      const existing = await this.databases.listDocuments(
+        this.databasesId,
+        this.attendClassesCollection,
+        [
+          Query.equal("UserID", userId),
+          Query.equal("SubjectID", subjectId),
+          Query.equal("ClassDate", date),
+          Query.equal("ClassTime", time),
+        ]
+      );
+
+      if (existing.total > 0) {
+        console.log("⚠️ Extra class already exists — not creating duplicate.");
+        return { success: false, message: "Duplicate class found" };
+      }
+
+      const result = await this.databases.createDocument(
         this.databasesId,
         this.attendClassesCollection,
         "unique()",
@@ -82,8 +98,11 @@ export class ClassAttendService {
           Status: status,
         }
       );
+
+      console.log("✅ Extra class added:", result);
+      return { success: true, data: result };
     } catch (error) {
-      console.error("Error adding extra class : ", error.message);
+      console.error("Error adding extra class:", error.message);
       throw error;
     }
   }
