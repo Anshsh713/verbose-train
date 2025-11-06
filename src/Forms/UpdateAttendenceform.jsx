@@ -4,10 +4,13 @@ import Button from "../Common_Componenets/Common_Button/Button";
 
 export default function UpdateAttendenceform({ updateClass }) {
   const [status, setStatus] = useState("");
-  const handleUpdate = (e) => {
+  const handleUpdate = async (e) => {
     e.preventDefault();
-
-    if (updateClass) updateClass({ Status: status });
+    if (!status) return alert("Please select a status!");
+    const success = await updateClass({ Status: status });
+    if (success) {
+      setStatus("");
+    }
   };
   return (
     <form onSubmit={handleUpdate}>

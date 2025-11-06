@@ -10,23 +10,24 @@ export const AttendanceProvider = ({ children }) => {
   const { allSubjects } = useSchedule();
   const { user } = useUser();
   const { LoadData, SaveData } = useLocalStorage();
-  const [loading, setloading] = useState(true);
+
+  const [loading, setLoading] = useState(true);
   const [attendanceRecords, setAttendanceRecords] = useState({});
-  const today = new Date().toISOString().split("T")[0];
-  const dayName = new Date().toLocaleDateString("en-US", { weekday: "long" });
   const [totalAttendance, setTotalAttendance] = useState({});
 
-  const loadfromcacheforAttendence = () => {
+  const today = new Date().toISOString().split("T")[0];
+  const dayName = new Date().toLocaleDateString("en-US", { weekday: "long" });
+
+  const loadFromCacheForAttendance = () => {
     try {
       const cache = LoadData("AttendClassesCache");
       if (cache) {
         setAttendanceRecords(cache.attendancerecords);
-        setloading(false);
-        console.log("data of attendence from local storage", attendanceRecords);
+        setLoading(false);
         return true;
       }
     } catch (error) {
-      console.error("NOT able to get attendence : ", error);
+      console.error("❌ Failed to load attendance from cache:", error);
     }
     return false;
   };
@@ -37,19 +38,21 @@ export const AttendanceProvider = ({ children }) => {
     });
   };
 
-  const TotalAttendence = async (subjectId) => {
+  const TotalAttendance = async (subjectId) => {
     if (!user || !allSubjects?.length) return;
-    setloading(true);
-    const Attendence_Local_Storage =
+    setLoading(true);
+
+    const cache =
       JSON.parse(localStorage.getItem("TotalAttendanceCache")) || {};
-    if (Attendence_Local_Storage[subjectId] !== undefined) {
+    if (cache[subjectId] !== undefined) {
       setTotalAttendance((prev) => ({
         ...prev,
-        [subjectId]: Attendence_Local_Storage[subjectId],
+        [subjectId]: cache[subjectId],
       }));
-      setloading(false);
+      setLoading(false);
       return;
     }
+
     try {
       const data = await classAttendService.TotalAttendance(
         user.$id,
@@ -61,45 +64,44 @@ export const AttendanceProvider = ({ children }) => {
       }));
       localStorage.setItem(
         "TotalAttendanceCache",
-        JSON.stringify({ ...Attendence_Local_Storage, [subjectId]: data })
+        JSON.stringify({ ...cache, [subjectId]: data })
       );
     } catch (error) {
-      console.error("Error fetching attendance:", error);
+      console.error("❌ Error fetching total attendance:", error);
     } finally {
-      setloading(false);
+      setLoading(false);
     }
   };
 
   const fetchAttendance = async (subjects) => {
     if (!user || !subjects?.length) return;
-    setloading(true);
-    if (loadfromcacheforAttendence()) {
-      setloading(false);
-      return;
-    }
+    setLoading(true);
+
+    if (loadFromCacheForAttendance()) return;
+
     try {
-      const allRecords = {};
       const data = await classAttendService.getAttendanceByDate(
         user.$id,
         today,
         dayName
       );
+
+      const allRecords = {};
       data.forEach((rec) => {
         const key = `${rec.SubjectID}_${rec.ClassDay}_${rec.ClassTime}`;
         allRecords[key] = rec;
       });
+
       setAttendanceRecords(allRecords);
-      saveToCache({
-        attendancerecords: allRecords || [],
-      });
-      console.log("Fetched the Attendence");
+      saveToCache({ attendancerecords: allRecords });
     } catch (error) {
-      console.error("Error fetching attendance:", error);
+      console.error("❌ Error fetching attendance:", error);
     } finally {
-      setloading(false);
+      setLoading(false);
     }
   };
 
+  // ✅ Mark Attendance
   const markAttendance = async (status, subj, schedule) => {
     if (!user) return;
     try {
@@ -112,6 +114,7 @@ export const AttendanceProvider = ({ children }) => {
         today,
         status
       );
+
       const key = `${subj.subjectId}_${schedule.day}_${schedule.time}`;
       const updatedRecords = {
         ...attendanceRecords,
@@ -119,20 +122,24 @@ export const AttendanceProvider = ({ children }) => {
           Status: status,
           ClassDay: schedule.day,
           ClassTime: schedule.time,
+          ClassDate: today,
         },
       };
 
       setAttendanceRecords(updatedRecords);
       saveToCache({ attendancerecords: updatedRecords });
+
+      // Clear total attendance cache for this subject
       const totalCache =
         JSON.parse(localStorage.getItem("TotalAttendanceCache")) || {};
       delete totalCache[subj.subjectId];
       localStorage.setItem("TotalAttendanceCache", JSON.stringify(totalCache));
     } catch (error) {
-      console.log("Not Able to Mark the Attendence", error);
+      console.log("❌ Failed to mark attendance:", error);
     }
   };
 
+  // ✅ Add Extra Class
   const handleExtraClass = async (data) => {
     if (!user) return false;
     try {
@@ -146,15 +153,64 @@ export const AttendanceProvider = ({ children }) => {
         data.status
       );
 
+      const key = `${data.subjectID}_${data.day}_${data.time}`;
+      const updatedRecords = {
+        ...attendanceRecords,
+        [key]: {
+          Status: data.status,
+          ClassDay: data.day,
+          ClassTime: data.time,
+          ClassDate: data.date || today,
+        },
+      };
+
+      setAttendanceRecords(updatedRecords);
+      saveToCache({
+        userId: user.$id,
+        timestamp: today,
+        attendancerecords: updatedRecords,
+      });
+
+      // Clear total cache for this subject
       const totalCache =
         JSON.parse(localStorage.getItem("TotalAttendanceCache")) || {};
       delete totalCache[data.subjectID];
       localStorage.setItem("TotalAttendanceCache", JSON.stringify(totalCache));
 
-      console.log("✅ Extra class added and cache cleared!");
       return true;
     } catch (error) {
       console.log("❌ Error adding extra class:", error);
+      return false;
+    }
+  };
+
+  const UpdateAttendance = async (subj, schedule, data) => {
+    try {
+      await classAttendService.updateAttendance(
+        user.$id,
+        subj.subjectId,
+        subj.subjectName,
+        schedule.day,
+        schedule.time,
+        schedule.date || today,
+        data
+      );
+
+      const totalCache =
+        JSON.parse(localStorage.getItem("TotalAttendanceCache")) || {};
+      delete totalCache[subj.subjectId];
+      localStorage.setItem("TotalAttendanceCache", JSON.stringify(totalCache));
+
+      setTotalAttendance((prev) => {
+        const updated = { ...prev };
+        delete updated[subj.subjectId];
+        return updated;
+      });
+
+      await TotalAttendance(subj.subjectId);
+      return true;
+    } catch (error) {
+      console.error("❌ Error updating attendance:", error);
       return false;
     }
   };
@@ -166,9 +222,10 @@ export const AttendanceProvider = ({ children }) => {
         fetchAttendance,
         markAttendance,
         loading,
-        TotalAttendence,
+        TotalAttendance,
         totalAttendance,
         handleExtraClass,
+        UpdateAttendance,
       }}
     >
       {children}

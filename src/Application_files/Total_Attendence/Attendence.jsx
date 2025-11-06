@@ -4,7 +4,7 @@ import ExtraClassform from "../../Forms/ExtraClassform.jsx";
 import { useAttendance } from "../../Context/AttendenceContext.jsx";
 
 export default function Total_Attendence({ subject, refresh_Trigger }) {
-  const { TotalAttendence, totalAttendance, handleExtraClass } =
+  const { TotalAttendance, totalAttendance, handleExtraClass } =
     useAttendance();
   const [extraclass, setExtraClass] = useState(false);
   const [refresh, setRefresh] = useState(false);
@@ -20,7 +20,7 @@ export default function Total_Attendence({ subject, refresh_Trigger }) {
   };
 
   useEffect(() => {
-    TotalAttendence(subject.$id);
+    TotalAttendance(subject.$id);
   }, [refresh_Trigger, subject, refresh]);
 
   if (!subject || !subject.$id) return <p>No subject found.</p>;

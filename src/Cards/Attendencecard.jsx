@@ -3,12 +3,18 @@ import Button from "../Common_Componenets/Common_Button/Button";
 import UpdateAttendenceform from "../Forms/UpdateAttendenceform.jsx";
 import { useAttendance } from "../Context/AttendenceContext.jsx";
 export default function Attendencecard({ subject = [], onAttendenceMarked }) {
-  const { attendanceRecords, fetchAttendance, markAttendance, loading } =
-    useAttendance();
+  const {
+    attendanceRecords,
+    fetchAttendance,
+    markAttendance,
+    loading,
+    UpdateAttendence,
+  } = useAttendance();
   const [lastAction, setLastAction] = useState("");
   const [updateattendence, setUpdateAttendence] = useState(false);
-  const toggleupdateattendence = () => {
-    setUpdateAttendence(!updateattendence);
+  const [editingkey, setEditingKey] = useState(null);
+  const toggleUpdateAttendance = (key) => {
+    setEditingKey((prev) => (prev === key ? null : key));
   };
   useEffect(() => {
     if (subject.length > 0) {
@@ -56,9 +62,22 @@ export default function Attendencecard({ subject = [], onAttendenceMarked }) {
                         <span>Your attendance is marked: {record.Status}</span>
                         <Button
                           title="Mistake ?"
-                          onClick={toggleupdateattendence}
+                          onClick={() => toggleUpdateAttendance(key)}
                         />
-                        {updateattendence && <UpdateAttendenceform />}
+                        {editingkey === key && (
+                          <UpdateAttendenceform
+                            updateClass={async (data) => {
+                              const sucess = await UpdateAttendence(
+                                subj,
+                                schedule,
+                                data
+                              );
+                              if (sucess) {
+                                setEditingKey(null);
+                              }
+                            }}
+                          />
+                        )}
                       </div>
                     ) : (
                       <>

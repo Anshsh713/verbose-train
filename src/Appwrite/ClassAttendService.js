@@ -107,32 +107,51 @@ export class ClassAttendService {
     }
   }
 
-  async updateAttendance(attendanceId, data) {
+  async updateAttendance(
+    userId,
+    subjectId,
+    subjectName,
+    day,
+    time,
+    date,
+    data
+  ) {
     try {
-      const record = await this.databases.getDocument(
+      // Find the existing attendance record with all parameters
+      const existing = await this.databases.listDocuments(
         this.databasesId,
         this.attendClassesCollection,
-        attendanceId
+        [
+          Query.equal("UserID", userId),
+          Query.equal("SubjectID", subjectId),
+          Query.equal("SubjectName", subjectName),
+          Query.equal("ClassDay", day),
+          Query.equal("ClassTime", time),
+          Query.equal("ClassDate", date), // Optional if you save date in DB
+        ]
       );
-      if (record.Status !== "Not") {
-        return {
-          success: false,
-          message: "Attendance can only be updated if marked as Not Present",
-        };
+
+      if (!existing.documents.length) {
+        throw new Error("Attendance record not found for this specific class!");
       }
+
+      const attendanceId = existing.documents[0].$id;
+
+      // Update the record
       const updated = await this.databases.updateDocument(
         this.databasesId,
         this.attendClassesCollection,
         attendanceId,
         data
       );
+
       return {
         success: true,
         message: "Attendance updated successfully",
         updatedRecord: updated,
       };
     } catch (error) {
-      console.error("Not able to Update your Attendance ", error.message);
+      console.error("Error updating attendance: ", error.message);
       throw error;
     }
   }
