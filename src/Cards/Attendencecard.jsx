@@ -8,7 +8,7 @@ export default function Attendencecard({ subject = [], onAttendenceMarked }) {
     fetchAttendance,
     markAttendance,
     loading,
-    UpdateAttendence,
+    UpdateAttendance,
   } = useAttendance();
   const [lastAction, setLastAction] = useState("");
   const [updateattendence, setUpdateAttendence] = useState(false);
@@ -67,7 +67,7 @@ export default function Attendencecard({ subject = [], onAttendenceMarked }) {
                         {editingkey === key && (
                           <UpdateAttendenceform
                             updateClass={async (data) => {
-                              const sucess = await UpdateAttendence(
+                              const sucess = await UpdateAttendance(
                                 subj,
                                 schedule,
                                 data

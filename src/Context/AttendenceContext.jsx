@@ -195,7 +195,22 @@ export const AttendanceProvider = ({ children }) => {
         schedule.date || today,
         data
       );
-
+      const key = `${subj.subjectId}_${schedule.day}_${schedule.time}`;
+      const updatedRecords = {
+        ...attendanceRecords,
+        [key]: {
+          Status: data.Status,
+          ClassDay: schedule.day,
+          ClassTime: schedule.time,
+          ClassDate: schedule.date || today,
+        },
+      };
+      setAttendanceRecords(updatedRecords);
+      saveToCache({
+        userId: user.$id,
+        timestamp: today,
+        attendancerecords: updatedRecords,
+      });
       const totalCache =
         JSON.parse(localStorage.getItem("TotalAttendanceCache")) || {};
       delete totalCache[subj.subjectId];
