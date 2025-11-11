@@ -34,6 +34,7 @@ export default function Attendencecard({ subject = [], onAttendenceMarked }) {
       setLastAction(`Error: ${error.message}`);
     }
   };
+  if (subject.length == 0) return <p>No class Today Enjoy</p>;
   return (
     <div>
       <h2>Your Subjects</h2>

@@ -10,7 +10,7 @@ export const AttendanceProvider = ({ children }) => {
   const { allSubjects } = useSchedule();
   const { user } = useUser();
   const { LoadData, SaveData } = useLocalStorage();
-
+  const [extraclassesRecords, setExtraClassesRecords] = useState({});
   const [loading, setLoading] = useState(true);
   const [attendanceRecords, setAttendanceRecords] = useState({});
   const [totalAttendance, setTotalAttendance] = useState({});
@@ -18,9 +18,9 @@ export const AttendanceProvider = ({ children }) => {
   const today = new Date().toISOString().split("T")[0];
   const dayName = new Date().toLocaleDateString("en-US", { weekday: "long" });
 
-  const loadFromCacheForAttendance = () => {
+  const loadFromCacheForAttendance = (key) => {
     try {
-      const cache = LoadData("AttendClassesCache");
+      const cache = LoadData(key);
       if (cache) {
         setAttendanceRecords(cache.attendancerecords);
         setLoading(false);
@@ -32,8 +32,8 @@ export const AttendanceProvider = ({ children }) => {
     return false;
   };
 
-  const saveToCache = (data) => {
-    SaveData("AttendClassesCache", {
+  const saveToCache = (data, key) => {
+    SaveData(key, {
       ...data,
     });
   };
@@ -77,7 +77,7 @@ export const AttendanceProvider = ({ children }) => {
     if (!user || !subjects?.length) return;
     setLoading(true);
 
-    if (loadFromCacheForAttendance()) return;
+    if (loadFromCacheForAttendance("AttendClassesCache")) return;
 
     try {
       const data = await classAttendService.getAttendanceByDate(
@@ -93,7 +93,7 @@ export const AttendanceProvider = ({ children }) => {
       });
 
       setAttendanceRecords(allRecords);
-      saveToCache({ attendancerecords: allRecords });
+      saveToCache({ attendancerecords: allRecords }, "AttendClassesCache");
     } catch (error) {
       console.error("❌ Error fetching attendance:", error);
     } finally {
@@ -127,7 +127,7 @@ export const AttendanceProvider = ({ children }) => {
       };
 
       setAttendanceRecords(updatedRecords);
-      saveToCache({ attendancerecords: updatedRecords });
+      saveToCache({ attendancerecords: updatedRecords }, "AttendClassesCache");
 
       // Clear total attendance cache for this subject
       const totalCache =
@@ -139,6 +139,19 @@ export const AttendanceProvider = ({ children }) => {
     }
   };
 
+  const fetchExtraClass = () => {
+    try {
+      const cache = LoadData("ExtraClassCache");
+      if (cache?.extraclassesRecords) {
+        setExtraClassesRecords(cache.extraclassesRecords);
+        setLoading(false);
+        return true;
+      }
+    } catch (error) {
+      console.log("Failed to load the extra classes");
+    }
+    return false;
+  };
   // ✅ Add Extra Class
   const handleExtraClass = async (data) => {
     if (!user) return false;
@@ -155,8 +168,10 @@ export const AttendanceProvider = ({ children }) => {
 
       const key = `${data.subjectID}_${data.day}_${data.time}`;
       const updatedRecords = {
-        ...attendanceRecords,
+        ...extraclassesRecords,
         [key]: {
+          SubjectID: data.subjectID,
+          SubjectName: data.subjectName,
           Status: data.status,
           ClassDay: data.day,
           ClassTime: data.time,
@@ -164,12 +179,13 @@ export const AttendanceProvider = ({ children }) => {
         },
       };
 
-      setAttendanceRecords(updatedRecords);
-      saveToCache({
-        userId: user.$id,
-        timestamp: today,
-        attendancerecords: updatedRecords,
-      });
+      setExtraClassesRecords(updatedRecords);
+      saveToCache(
+        {
+          extraclassesRecords: updatedRecords,
+        },
+        "ExtraClassCache"
+      );
 
       // Clear total cache for this subject
       const totalCache =
@@ -183,7 +199,42 @@ export const AttendanceProvider = ({ children }) => {
       return false;
     }
   };
+  const UpdateExtraClassAttendence = async (rec, data) => {
+    if (!user) return false;
+    try {
+      await classAttendService.updateAttendance(
+        user.$id,
+        rec.SubjectID,
+        rec.SubjectName,
+        rec.ClassDay,
+        rec.ClassTime,
+        rec.ClassDate || today,
+        data
+      );
+      const key = `${rec.SubjectID}_${rec.ClassDay}_${rec.ClassTime}`;
 
+      const updatedRecords = {
+        ...extraclassesRecords,
+        [key]: {
+          ...rec,
+          Status: data.Status,
+        },
+      };
+      setExtraClassesRecords(updatedRecords);
+      saveToCache(
+        {
+          extraclassesRecords: updatedRecords,
+        },
+        "ExtraClassCache"
+      );
+      const totalCache =
+        JSON.parse(localStorage.getItem("TotalAttendanceCache")) || {};
+      delete totalCache[rec.SubjectID];
+      localStorage.setItem("TotalAttendanceCache", JSON.stringify(totalCache));
+
+      await TotalAttendance(subj.subjectId);
+    } catch (error) {}
+  };
   const UpdateAttendance = async (subj, schedule, data) => {
     try {
       await classAttendService.updateAttendance(
@@ -241,6 +292,9 @@ export const AttendanceProvider = ({ children }) => {
         totalAttendance,
         handleExtraClass,
         UpdateAttendance,
+        fetchExtraClass,
+        extraclassesRecords,
+        UpdateExtraClassAttendence,
       }}
     >
       {children}

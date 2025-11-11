@@ -4,6 +4,7 @@ import Attendencefrom from "../../Forms/Attendenceform.jsx";
 import Attendencecard from "../../Cards/Attendencecard.jsx";
 import { useSchedule } from "../../Context/ScheduleContext.jsx";
 import Total_Attendence from "../Total_Attendence/Attendence.jsx";
+import ExtraClasscard from "../../Cards/ExtraClassAttendencecard.jsx";
 function Home() {
   const { allSubjects, todayClasses, refreshSchedule } = useSchedule();
   const [addSubject, setaddSubject] = useState(false);
@@ -24,6 +25,7 @@ function Home() {
         <Button title="Add" className="Adding" onClick={toggleshowing} />
         {addSubject && <Attendencefrom onSubjectAdded={refreshSchedule} />}
       </div>
+      <ExtraClasscard />
       <div>
         {allSubjects.map((subj) => (
           <Total_Attendence
