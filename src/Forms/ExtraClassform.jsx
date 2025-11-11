@@ -6,8 +6,10 @@ export default function ExtraClassform({
   subjectName,
   onextraClass,
 }) {
+  const Today = new Date().toLocaleDateString("en-US", { weekday: "long" });
+
   const [Day, setDay] = useState("");
-  const [Date, setDate] = useState("");
+  const [date, setDate] = useState("");
   const [Time, setTime] = useState("");
   const [status, setStatus] = useState("");
   const handleSubmit = async (e) => {
@@ -16,8 +18,8 @@ export default function ExtraClassform({
     const data = {
       subjectID,
       subjectName,
-      day: Day,
-      date: Date,
+      day: Today,
+      date: date,
       time: Time,
       status: status,
     };
@@ -33,22 +35,15 @@ export default function ExtraClassform({
   return (
     <form onSubmit={handleSubmit}>
       <h2>Add Extra Class</h2>
-      <select value={Day} onChange={(e) => setDay(e.target.value)}>
-        <option value="">Select Day</option>
-        <option>Monday</option>
-        <option>Tuesday</option>
-        <option>Wednesday</option>
-        <option>Thursday</option>
-        <option>Friday</option>
-        <option>Saturday</option>
-        <option>Sunday</option>
-      </select>
+      <h1>
+        Day : <p>{Today}</p>
+      </h1>
       <Input
         label="Class Date : "
         type="date"
         placeholder="Enter yout Extra class Date"
         required
-        value={Date}
+        value={date}
         onChange={(e) => setDate(e.target.value)}
       />
       <Input
